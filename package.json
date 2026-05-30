@@ -4,6 +4,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "build-client": "npm --prefix client run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
