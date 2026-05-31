@@ -2,20 +2,48 @@
   "name": "academic-performance-predictor",
   "productName": "Предсказатель успеваемости студентов",
   "version": "1.0.0",
+  "description": "Desktop app for predicting student academic performance",
   "main": "main.js",
+  "author": "",
+  "license": "ISC",
   "scripts": {
     "start": "npm run build-client && electron .",
     "build-client": "npm --prefix client run build",
+    "build:exe": "npm run build-client && electron-builder --win",
+    "build:exe:portable": "npm run build-client && electron-builder --win portable",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "dependencies": {
+  "build": {
+    "appId": "com.academic-performance-predictor.app",
+    "productName": "Предсказатель успеваемости студентов",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "build/**/*",
+      "package.json"
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   },
-  
   "devDependencies": {
-    "electron": "^42.3.0"
-  },
-  
-  "author": "",
-  "license": "ISC",
-  "description": ""
+    "electron": "^42.3.0",
+    "electron-builder": "^26.0.12"
+  }
 }
