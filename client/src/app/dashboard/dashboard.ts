@@ -15,6 +15,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import Chart from 'chart.js/auto';
+import { ExcelMergeService } from '../excel/excel-merge.service';
 import { ModelService } from '../model/model.service';
 import { CorrelationPair, RiskLevel, StudentPrediction } from '../model/types';
 
@@ -35,6 +36,7 @@ import { CorrelationPair, RiskLevel, StudentPrediction } from '../model/types';
 })
 export class Dashboard {
   private readonly modelService = inject(ModelService);
+  private readonly excelMergeService = inject(ExcelMergeService);
 
   readonly model = this.modelService.model;
   readonly restored = this.modelService.restoredFromStorage;
@@ -45,6 +47,11 @@ export class Dashboard {
   readonly error = signal<string>('');
   readonly trainingFileName = signal<string>('');
   readonly predictionFileName = signal<string>('');
+
+  readonly excelFiles = signal<File[]>([]);
+  readonly excelBusy = signal(false);
+  readonly excelStatus = signal<string>('');
+  readonly excelError = signal<string>('');
 
   readonly attendanceCanvas = viewChild<ElementRef<HTMLCanvasElement>>('attendanceCanvas');
   readonly examBySubjectCanvas = viewChild<ElementRef<HTMLCanvasElement>>('examBySubjectCanvas');
@@ -190,6 +197,60 @@ export class Dashboard {
     this.destroyCharts();
     this.status.set('Модель удалена.');
   }
+
+  // ---- Excel merge ------------------------------------------------------
+
+  onExcelFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const list = input.files;
+    if (!list || list.length === 0) return;
+    this.excelFiles.set(Array.from(list));
+    this.excelError.set('');
+    this.excelStatus.set(`Выбрано файлов: ${list.length}. Порядок объединения — как в списке ниже.`);
+    input.value = '';
+  }
+
+  clearExcelFiles(): void {
+    this.excelFiles.set([]);
+    this.excelStatus.set('');
+    this.excelError.set('');
+  }
+
+  async mergeExcelFiles(): Promise<void> {
+    const files = this.excelFiles();
+    if (files.length < 2) {
+      this.excelError.set('Выберите минимум два Excel-файла (.xlsx).');
+      return;
+    }
+
+    this.excelBusy.set(true);
+    this.excelError.set('');
+    this.excelStatus.set('Объединение файлов...');
+
+    try {
+      const defaultName =
+        files.length === 2
+          ? `${files[0].name.replace(/\.xlsx$/i, '')}_${files[1].name.replace(/\.xlsx$/i, '')}.xlsx`
+          : 'merged.xlsx';
+      const result = await this.excelMergeService.mergeAndSave(files, defaultName);
+      if (result.saved) {
+        this.excelStatus.set(
+          result.filePath
+            ? `Файл сохранён: ${result.filePath}`
+            : 'Объединённый файл сохранён.'
+        );
+      } else {
+        this.excelStatus.set('Сохранение отменено.');
+      }
+    } catch (e) {
+      this.excelError.set((e as Error).message);
+      this.excelStatus.set('');
+    } finally {
+      this.excelBusy.set(false);
+    }
+  }
+
+  trackExcelFile = (_: number, file: File) => file.name + file.size;
 
   // ---- formatting helpers used by the template --------------------------
 

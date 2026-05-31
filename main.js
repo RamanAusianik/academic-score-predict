@@ -1,7 +1,20 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog } = require('electron')
+const fs = require('fs')
 const path = require('path')
 
 app.setName('Предсказатель успеваемости студентов')
+
+ipcMain.handle('save-xlsx-file', async (_event, data, defaultName) => {
+  const win = BrowserWindow.getFocusedWindow()
+  const { canceled, filePath } = await dialog.showSaveDialog(win ?? undefined, {
+    title: 'Сохранить объединённый Excel',
+    defaultPath: defaultName || 'merged.xlsx',
+    filters: [{ name: 'Excel', extensions: ['xlsx'] }],
+  })
+  if (canceled || !filePath) return { ok: false, canceled: true }
+  fs.writeFileSync(filePath, Buffer.from(data))
+  return { ok: true, filePath }
+})
 
 function createWindow () {
   // Create the browser window.
