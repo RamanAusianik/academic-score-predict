@@ -7,8 +7,20 @@ const HEADER_FILL: ExcelJS.Fill = {
   fgColor: { argb: 'FF92D050' },
 };
 
+/** Turquoise separator line between merged file sections. */
+const TURQUOISE_FILL: ExcelJS.Fill = {
+  type: 'pattern',
+  pattern: 'solid',
+  fgColor: { argb: 'FF00B0B0' },
+};
+
 /** Header block spans rows 1–3 in the source templates (merged title/sub-header area). */
 const HEADER_BLOCK_ROWS = 3;
+
+/** Column B (0-based index 1) holds section / grand total labels in the templates. */
+const LABEL_COL_INDEX = 1;
+
+type RowKind = 'data' | 'separator-turquoise' | 'separator-green';
 
 interface StyledCell {
   value: ExcelJS.CellValue;
@@ -18,6 +30,7 @@ interface StyledCell {
 export interface StyledRow {
   cells: StyledCell[];
   height?: number;
+  kind?: RowKind;
 }
 
 interface ParsedSheet {
@@ -67,6 +80,66 @@ function applyHeaderStyle(cell: ExcelJS.Cell, style?: Partial<ExcelJS.Style>): v
   if (style?.alignment) cell.alignment = style.alignment;
   if (style?.numFmt) cell.numFmt = style.numFmt;
   cell.fill = HEADER_FILL;
+}
+
+function applyTurquoiseStyle(cell: ExcelJS.Cell): void {
+  cell.fill = TURQUOISE_FILL;
+}
+
+function numericValue(value: ExcelJS.CellValue): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const n = Number(value.replace(',', '.').trim());
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
+/** Locate the «Всего» / «Итого» column from the header block. */
+function findTotalColumnIndex(headerBlock: StyledRow[]): number {
+  for (const row of headerBlock) {
+    for (let c = 0; c < row.cells.length; c++) {
+      const text = cellText(row.cells[c].value).toLowerCase();
+      if (text === 'всего' || text === 'итого') return c;
+    }
+  }
+  return headerBlock[0]?.cells.length ? headerBlock[0].cells.length - 1 : 0;
+}
+
+function isSectionTotalRow(row: StyledRow): boolean {
+  return cellText(row.cells[LABEL_COL_INDEX]?.value ?? '')
+    .toLowerCase()
+    .includes('итого');
+}
+
+function createEmptyFilledRow(colCount: number, kind: RowKind): StyledRow {
+  return {
+    kind,
+    cells: Array.from({ length: colCount }, () => ({ value: '' })),
+  };
+}
+
+function createGrandTotalRow(colCount: number, totalCol: number, sum: number): StyledRow {
+  const cells: StyledCell[] = Array.from({ length: colCount }, () => ({ value: '' }));
+  cells[LABEL_COL_INDEX] = { value: 'ИТОГО' };
+  cells[totalCol] = { value: sum };
+  return { kind: 'separator-green', cells };
+}
+
+/** Read the «Итого» value from the last subtotal row at the end of a file's content. */
+function getSectionTotalFromFile(rows: StyledRow[], totalCol: number, fileLabel: string): number {
+  for (let i = rows.length - 1; i >= 0; i--) {
+    if (!isSectionTotalRow(rows[i])) continue;
+    const n = numericValue(rows[i].cells[totalCol]?.value ?? null);
+    if (n !== null) return n;
+  }
+  throw new Error(`${fileLabel}: не найдена строка «Итого» с числовым значением в колонке «Всего».`);
+}
+
+/** Sum the per-file «Итого» values into the final grand total. */
+function sumFileSectionTotals(fileTotals: number[]): number {
+  return fileTotals.reduce((acc, n) => acc + n, 0);
 }
 
 function rowsEqual(a: StyledRow, b: StyledRow): boolean {
@@ -153,7 +226,7 @@ async function readStyledSheet(data: ArrayBuffer): Promise<ParsedSheet> {
         style: extractStyle(cell),
       });
     }
-    rows.push({ cells, height: row.height });
+    rows.push({ cells, height: row.height, kind: 'data' });
   }
 
   const merges = [...(worksheet.model.merges ?? [])];
@@ -174,6 +247,9 @@ export function mergeStyledSheets(sheets: ParsedSheet[]): MergeResult {
   const mergedMerges: string[] = [];
   const seenMerges = new Set<string>();
   let headerBlock: StyledRow[] | null = null;
+  let maxCol = 0;
+  let totalCol = 0;
+  const fileSectionTotals: number[] = [];
 
   const addMerge = (ref: string) => {
     if (seenMerges.has(ref)) return;
@@ -184,6 +260,7 @@ export function mergeStyledSheets(sheets: ParsedSheet[]): MergeResult {
   for (let fileIdx = 0; fileIdx < sheets.length; fileIdx++) {
     const sheet = sheets[fileIdx];
     if (sheet.rows.length === 0) continue;
+    maxCol = Math.max(maxCol, ...sheet.rows.map((r) => r.cells.length));
 
     if (fileIdx > 0 && sheet.rows.length <= HEADER_BLOCK_ROWS) {
       throw new Error(`Файл №${fileIdx + 1} содержит только заголовок, данных для объединения нет.`);
@@ -192,6 +269,7 @@ export function mergeStyledSheets(sheets: ParsedSheet[]): MergeResult {
     const fileHeaderBlock = sheet.rows.slice(0, HEADER_BLOCK_ROWS);
     if (!headerBlock) {
       headerBlock = fileHeaderBlock;
+      totalCol = findTotalColumnIndex(headerBlock);
     } else {
       for (let h = 0; h < HEADER_BLOCK_ROWS; h++) {
         if (!rowsEqual(headerBlock[h], fileHeaderBlock[h])) {
@@ -202,6 +280,15 @@ export function mergeStyledSheets(sheets: ParsedSheet[]): MergeResult {
       }
     }
 
+    const fileContent = fileIdx === 0 ? sheet.rows : sheet.rows.slice(HEADER_BLOCK_ROWS);
+    fileSectionTotals.push(
+      getSectionTotalFromFile(fileContent, totalCol, `Файл №${fileIdx + 1}`)
+    );
+
+    if (fileIdx > 0) {
+      mergedRows.push(createEmptyFilledRow(maxCol, 'separator-turquoise'));
+    }
+
     const outputStartRow = mergedRows.length + 1;
 
     if (fileIdx === 0) {
@@ -210,10 +297,8 @@ export function mergeStyledSheets(sheets: ParsedSheet[]): MergeResult {
       continue;
     }
 
-    // Subsequent files: skip the duplicate header block (rows 1–3), append content only.
     mergedRows.push(...sheet.rows.slice(HEADER_BLOCK_ROWS));
 
-    // First content row in source is HEADER_BLOCK_ROWS + 1 (Excel row 4).
     const rowOffset = outputStartRow - (HEADER_BLOCK_ROWS + 1);
     for (const ref of sheet.merges) {
       if (mergeWithinHeaderBlock(ref)) continue;
@@ -223,6 +308,11 @@ export function mergeStyledSheets(sheets: ParsedSheet[]): MergeResult {
 
   if (mergedRows.length === 0) {
     throw new Error('Выбранные файлы не содержат данных.');
+  }
+
+  if (headerBlock) {
+    const grandTotal = sumFileSectionTotals(fileSectionTotals);
+    mergedRows.push(createGrandTotalRow(maxCol, totalCol, grandTotal));
   }
 
   return { rows: mergedRows, merges: mergedMerges };
@@ -239,7 +329,12 @@ async function writeStyledXlsx(rows: StyledRow[], merges: string[], sheetName = 
     row.cells.forEach((styledCell, colIndex) => {
       const cell = excelRow.getCell(colIndex + 1);
       cell.value = styledCell.value;
-      if (rowIndex < HEADER_BLOCK_ROWS) {
+
+      if (row.kind === 'separator-turquoise') {
+        applyTurquoiseStyle(cell);
+      } else if (row.kind === 'separator-green') {
+        applyHeaderStyle(cell, styledCell.style);
+      } else if (rowIndex < HEADER_BLOCK_ROWS) {
         applyHeaderStyle(cell, styledCell.style);
       } else {
         applyStyle(cell, styledCell.style);
