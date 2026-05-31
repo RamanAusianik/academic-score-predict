@@ -57,6 +57,7 @@ export class Dashboard {
   readonly examBySubjectCanvas = viewChild<ElementRef<HTMLCanvasElement>>('examBySubjectCanvas');
   readonly attendanceSubjectCanvas = viewChild<ElementRef<HTMLCanvasElement>>('attendanceSubjectCanvas');
   readonly histogramCanvas = viewChild<ElementRef<HTMLCanvasElement>>('histogramCanvas');
+  readonly gradeByAttendanceCanvas = viewChild<ElementRef<HTMLCanvasElement>>('gradeByAttendanceCanvas');
   readonly correlationCanvas = viewChild<ElementRef<HTMLCanvasElement>>('correlationCanvas');
 
   private charts: Chart[] = [];
@@ -78,6 +79,7 @@ export class Dashboard {
         this.examBySubjectCanvas(),
         this.attendanceSubjectCanvas(),
         this.histogramCanvas(),
+        this.gradeByAttendanceCanvas(),
         this.correlationCanvas(),
       ];
       if (!trends || refs.some((r) => !r)) return;
@@ -399,6 +401,34 @@ export class Dashboard {
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
+          },
+        })
+      );
+    }
+
+    const gradeAttn = this.gradeByAttendanceCanvas()?.nativeElement;
+    if (gradeAttn && trends.gradeByAttendance?.length) {
+      const buckets = trends.gradeByAttendance.filter((d) => d.students > 0);
+      this.charts.push(
+        new Chart(gradeAttn, {
+          type: 'bar',
+          data: {
+            labels: buckets.map((d) => d.label),
+            datasets: [
+              {
+                label: 'Средний балл за экзамен',
+                data: buckets.map((d) => Math.round(d.avgExam * 100) / 100),
+                backgroundColor: buckets.map((d) =>
+                  d.avgExam < 4 ? '#e53935' : d.avgExam < 7 ? '#fb8c00' : '#43a047'
+                ),
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { suggestedMin: 0, suggestedMax: 10 } },
           },
         })
       );

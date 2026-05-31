@@ -44,6 +44,9 @@ export interface Trends {
   subjectStats: SubjectStat[];
   highAttendanceSubjects: SubjectStat[];
   examGradeHistogram: { grade: number; count: number }[];
+  /** Average exam grade by student attendance bucket (10% wide). */
+  gradeByAttendance: { label: string; avgExam: number; students: number }[];
+  attendanceExamCorrelation: number;
   topCorrelations: CorrelationPair[];
   correlationMatrix: { subjects: string[]; matrix: number[][] };
 }

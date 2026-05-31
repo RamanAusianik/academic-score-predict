@@ -297,6 +297,54 @@ function computeTrends(rows: PerfRow[], subjectStats: SubjectStat[]): Trends {
 
   const examGradeHistogram = hist.map((count, grade) => ({ grade, count }));
 
+  // ---- average exam grade vs student attendance ----
+  const byStudent = new Map<
+    string,
+    { attnSum: number; attnCnt: number; examSum: number; examCnt: number }
+  >();
+  for (const row of rows) {
+    if (row.exam === null || row.exam === 0) continue;
+    let s = byStudent.get(row.studentId);
+    if (!s) {
+      s = { attnSum: 0, attnCnt: 0, examSum: 0, examCnt: 0 };
+      byStudent.set(row.studentId, s);
+    }
+    s.attnSum += row.attendance;
+    s.attnCnt++;
+    s.examSum += row.exam;
+    s.examCnt++;
+  }
+
+  const studentPoints: { attn: number; exam: number }[] = [];
+  for (const s of byStudent.values()) {
+    if (s.examCnt === 0) continue;
+    studentPoints.push({
+      attn: s.attnSum / s.attnCnt,
+      exam: s.examSum / s.examCnt,
+    });
+  }
+
+  const attnBuckets = Array.from({ length: 10 }, () => ({ examSum: 0, cnt: 0 }));
+  for (const p of studentPoints) {
+    const b = Math.min(9, Math.floor(p.attn / 10));
+    attnBuckets[b].examSum += p.exam;
+    attnBuckets[b].cnt++;
+  }
+
+  const gradeByAttendance = attnBuckets.map((b, i) => ({
+    label: i === 9 ? `${i * 10}–100%` : `${i * 10}–${(i + 1) * 10}%`,
+    avgExam: b.cnt ? b.examSum / b.cnt : 0,
+    students: b.cnt,
+  }));
+
+  const attendanceExamCorrelation =
+    studentPoints.length >= 5
+      ? pearson(
+          studentPoints.map((p) => p.attn),
+          studentPoints.map((p) => p.exam)
+        )
+      : 0;
+
   const highAttendanceSubjects = [...subjectStats]
     .sort((a, b) => b.avgAttendance - a.avgAttendance)
     .slice(0, 6);
@@ -361,6 +409,8 @@ function computeTrends(rows: PerfRow[], subjectStats: SubjectStat[]): Trends {
     subjectStats: [...subjectStats].sort((a, b) => b.avgExam - a.avgExam),
     highAttendanceSubjects,
     examGradeHistogram,
+    gradeByAttendance,
+    attendanceExamCorrelation,
     topCorrelations,
     correlationMatrix: { subjects, matrix },
   };

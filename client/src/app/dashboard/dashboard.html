@@ -88,6 +88,12 @@
             <div class="chart-box"><canvas #histogramCanvas></canvas></div>
           </div>
 
+          <div class="chart-card">
+            <h3>Зависимость среднего балла от посещаемости</h3>
+            <p class="hint">Средний балл студентов в группах по посещаемости (r = {{ num(t.attendanceExamCorrelation) }}).</p>
+            <div class="chart-box"><canvas #gradeByAttendanceCanvas></canvas></div>
+          </div>
+
           <div class="chart-card wide">
             <h3>Средний балл по предметам</h3>
             <div class="chart-box tall"><canvas #examBySubjectCanvas></canvas></div>
