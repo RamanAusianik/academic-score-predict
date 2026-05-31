@@ -331,9 +331,10 @@ export class Dashboard {
               {
                 label: 'Средний балл за экзамен',
                 data: stats.map((s) => Math.round(s.avgExam * 100) / 100),
-                backgroundColor: stats.map((s) =>
-                  s.difficulty === 'hard' ? '#e53935' : s.difficulty === 'easy' ? '#43a047' : '#fb8c00'
-                ),
+                backgroundColor: stats.map((s) => {
+                  const avg = s.avgExam;
+                  return avg < 4 ? '#e53935' : avg < 7 ? '#fb8c00' : '#43a047';
+                }),
               },
             ],
           },
@@ -381,7 +382,9 @@ export class Dashboard {
         new Chart(hist, {
           type: 'bar',
           data: {
-            labels: trends.examGradeHistogram.map((d) => String(d.grade)),
+            labels: trends.examGradeHistogram.map((d) =>
+              d.grade === 0 ? 'N/A' : String(d.grade)
+            ),
             datasets: [
               {
                 label: 'Количество экзаменационных оценок',
