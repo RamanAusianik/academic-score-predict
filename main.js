@@ -1,11 +1,14 @@
 const { app, BrowserWindow } = require('electron')
 const path = require('path')
 
+app.setName('Предсказатель успеваемости студентов')
+
 function createWindow () {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    title: 'Предсказатель успеваемости студентов',
     webPreferences: {
       // Allows us to use Node.js features in the frontend if needed
       nodeIntegration: true, 

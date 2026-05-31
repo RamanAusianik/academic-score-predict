@@ -1,0 +1,203 @@
+:host
+  display: block
+  min-height: 100dvh
+  background: #f4f6f8
+
+.topbar
+  position: sticky
+  top: 0
+  z-index: 10
+
+  .title
+    font-weight: 600
+
+  .spacer
+    flex: 1 1 auto
+
+  .topbar-meta
+    font-size: 0.8rem
+    opacity: 0.85
+
+.page
+  max-width: 1180px
+  margin: 0 auto
+  padding: 16px
+
+.block
+  margin-bottom: 18px
+
+code
+  background: rgba(0, 0, 0, 0.06)
+  padding: 1px 5px
+  border-radius: 4px
+  font-size: 0.85em
+
+.row
+  display: flex
+  flex-wrap: wrap
+  align-items: center
+  gap: 10px
+  margin: 6px 0
+
+.filename
+  font-size: 0.85rem
+  color: #555
+  font-style: italic
+
+.muted
+  color: #888
+  font-size: 0.85rem
+
+.banner
+  border-radius: 8px
+  padding: 10px 14px
+  margin: 10px 0
+  font-size: 0.9rem
+
+  &.compact
+    margin: 8px 0 0
+
+.banner-error
+  background: #fdecea
+  color: #b71c1c
+  border: 1px solid #f5c6c2
+
+.banner-info
+  background: #e8f4fd
+  color: #0d47a1
+  border: 1px solid #bbdefb
+
+.chips
+  margin-top: 12px
+
+  mat-chip
+    font-variant-numeric: tabular-nums
+
+// ---- charts ----
+.charts-grid
+  display: grid
+  grid-template-columns: repeat(2, minmax(0, 1fr))
+  gap: 18px
+
+  @media (max-width: 880px)
+    grid-template-columns: 1fr
+
+.chart-card
+  background: #fff
+  border: 1px solid #e3e7ea
+  border-radius: 10px
+  padding: 12px 14px
+
+  &.wide
+    grid-column: 1 / -1
+
+  h3
+    margin: 0 0 2px
+    font-size: 1rem
+
+  .hint
+    margin: 0 0 8px
+    font-size: 0.8rem
+    color: #777
+
+.chart-box
+  position: relative
+  height: 280px
+
+  &.tall
+    height: 520px
+
+// ---- highlights ----
+.highlights
+  margin-top: 20px
+
+  h3
+    font-size: 1rem
+    margin: 16px 0 8px
+
+.pair-list
+  margin: 0
+  padding-left: 18px
+  columns: 2
+  font-size: 0.9rem
+
+  @media (max-width: 720px)
+    columns: 1
+
+  li
+    margin-bottom: 4px
+
+// ---- prediction table ----
+.table-wrap
+  margin-top: 14px
+  max-height: 560px
+  overflow: auto
+  border: 1px solid #e3e7ea
+  border-radius: 10px
+
+.pred-table
+  border-collapse: collapse
+  width: 100%
+  font-size: 0.88rem
+
+  th, td
+    padding: 8px 10px
+    text-align: left
+    border-bottom: 1px solid #eceff1
+
+  th
+    position: sticky
+    top: 0
+    background: #fafafa
+    z-index: 1
+    font-weight: 600
+
+  td.center
+    text-align: center
+
+.risk-row-high
+  background: #fff5f5
+
+.risk-row-medium
+  background: #fffaf0
+
+.badge
+  display: inline-block
+  padding: 2px 8px
+  border-radius: 12px
+  font-size: 0.75rem
+  font-weight: 600
+  white-space: nowrap
+
+.badge-high
+  background: #e53935
+  color: #fff
+
+.badge-medium
+  background: #fb8c00
+  color: #fff
+
+.badge-low
+  background: #43a047
+  color: #fff
+
+.risky-subjects
+  max-width: 360px
+
+.subj-pill
+  display: inline-block
+  background: #fdecea
+  color: #b71c1c
+  border-radius: 10px
+  padding: 1px 8px
+  margin: 2px 3px 2px 0
+  font-size: 0.78rem
+
+mat-chip.risk-high
+  --mdc-chip-label-text-color: #b71c1c
+
+mat-chip.risk-medium
+  --mdc-chip-label-text-color: #e65100
+
+mat-chip.risk-low
+  --mdc-chip-label-text-color: #2e7d32

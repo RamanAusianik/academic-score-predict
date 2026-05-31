@@ -1,0 +1,242 @@
+[
+  {
+    "id": 1,
+    "name": "Математический анализ I",
+    "difficulty": "hard",
+    "requiresAttendance": false,
+    "durationSemesters": 2,
+    "correlationGroup": "math"
+  },
+  {
+    "id": 2,
+    "name": "Математический анализ II",
+    "difficulty": "hard",
+    "requiresAttendance": false,
+    "durationSemesters": 2,
+    "correlationGroup": "math"
+  },
+  {
+    "id": 3,
+    "name": "Линейная алгебра и геометрия",
+    "difficulty": "normal",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "math"
+  },
+  {
+    "id": 4,
+    "name": "Дискретная математика",
+    "difficulty": "normal",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "math"
+  },
+  {
+    "id": 5,
+    "name": "Теория вероятностей и матстатистика",
+    "difficulty": "hard",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "math"
+  },
+  {
+    "id": 6,
+    "name": "Дифференциальные уравнения",
+    "difficulty": "hard",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "math"
+  },
+  {
+    "id": 7,
+    "name": "Численные методы",
+    "difficulty": "normal",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "math"
+  },
+  {
+    "id": 8,
+    "name": "Введение в программирование",
+    "difficulty": "normal",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "programming"
+  },
+  {
+    "id": 9,
+    "name": "Объектно-ориентированное программирование",
+    "difficulty": "normal",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "programming"
+  },
+  {
+    "id": 10,
+    "name": "Структуры данных и алгоритмы",
+    "difficulty": "hard",
+    "requiresAttendance": false,
+    "durationSemesters": 2,
+    "correlationGroup": "programming"
+  },
+  {
+    "id": 11,
+    "name": "Базы данных",
+    "difficulty": "normal",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "programming"
+  },
+  {
+    "id": 12,
+    "name": "Операционные системы",
+    "difficulty": "hard",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "programming"
+  },
+  {
+    "id": 13,
+    "name": "Компьютерные сети",
+    "difficulty": "normal",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "programming"
+  },
+  {
+    "id": 14,
+    "name": "Веб-разработка",
+    "difficulty": "normal",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "programming"
+  },
+  {
+    "id": 15,
+    "name": "Физика I (механика)",
+    "difficulty": "hard",
+    "requiresAttendance": false,
+    "durationSemesters": 2,
+    "correlationGroup": "physics"
+  },
+  {
+    "id": 16,
+    "name": "Физика II (электричество)",
+    "difficulty": "hard",
+    "requiresAttendance": false,
+    "durationSemesters": 2,
+    "correlationGroup": "physics"
+  },
+  {
+    "id": 17,
+    "name": "Электротехника",
+    "difficulty": "normal",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "physics"
+  },
+  {
+    "id": 18,
+    "name": "Инженерная графика",
+    "difficulty": "normal",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "engineering"
+  },
+  {
+    "id": 19,
+    "name": "Теоретическая механика",
+    "difficulty": "hard",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "engineering"
+  },
+  {
+    "id": 20,
+    "name": "Материаловедение",
+    "difficulty": "normal",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "engineering"
+  },
+  {
+    "id": 21,
+    "name": "Схемотехника",
+    "difficulty": "hard",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "engineering"
+  },
+  {
+    "id": 22,
+    "name": "Философия",
+    "difficulty": "easy",
+    "requiresAttendance": true,
+    "durationSemesters": 1,
+    "correlationGroup": "humanities"
+  },
+  {
+    "id": 23,
+    "name": "История России",
+    "difficulty": "easy",
+    "requiresAttendance": true,
+    "durationSemesters": 1,
+    "correlationGroup": "humanities"
+  },
+  {
+    "id": 24,
+    "name": "Иностранный язык",
+    "difficulty": "normal",
+    "requiresAttendance": true,
+    "durationSemesters": 4,
+    "correlationGroup": "language"
+  },
+  {
+    "id": 25,
+    "name": "Экономика",
+    "difficulty": "easy",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "humanities"
+  },
+  {
+    "id": 26,
+    "name": "Правоведение",
+    "difficulty": "easy",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "humanities"
+  },
+  {
+    "id": 27,
+    "name": "Социология",
+    "difficulty": "easy",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "humanities"
+  },
+  {
+    "id": 28,
+    "name": "Физическая культура",
+    "difficulty": "easy",
+    "requiresAttendance": true,
+    "durationSemesters": 6,
+    "correlationGroup": "sport"
+  },
+  {
+    "id": 29,
+    "name": "Безопасность жизнедеятельности",
+    "difficulty": "normal",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "humanities"
+  },
+  {
+    "id": 30,
+    "name": "Менеджмент в IT",
+    "difficulty": "normal",
+    "requiresAttendance": false,
+    "durationSemesters": 1,
+    "correlationGroup": "humanities"
+  }
+]

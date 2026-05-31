@@ -1,5 +1,6 @@
 {
   "name": "academic-performance-predictor",
+  "productName": "Предсказатель успеваемости студентов",
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {

@@ -1,0 +1,204 @@
+<mat-toolbar color="primary" class="topbar">
+  <span class="title">Прогноз академической успеваемости</span>
+  <span class="spacer"></span>
+  @if (model(); as m) {
+    <span class="topbar-meta">модель обучена {{ m.trainedAt | slice: 0:10 }}</span>
+  }
+</mat-toolbar>
+
+<div class="page">
+  @if (busy()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (error()) {
+    <div class="banner banner-error">{{ error() }}</div>
+  }
+  @if (status() && !error()) {
+    <div class="banner banner-info">{{ status() }}</div>
+  }
+
+  <!-- ============================ TRAINING ============================ -->
+  <mat-card class="block">
+    <mat-card-header>
+      <mat-card-title>1. Обучающая выборка</mat-card-title>
+      <mat-card-subtitle>
+        Загрузите исторический CSV (например <code>data/training_data.csv</code>). Модель обучится,
+        найдёт тренды и сохранится локально — она автоматически поднимется при следующем открытии.
+      </mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="row">
+        <button mat-flat-button color="primary" (click)="trainInput.click()" [disabled]="busy()">
+          Загрузить обучающий CSV
+        </button>
+        <input #trainInput type="file" accept=".csv,text/csv" hidden (change)="onTrainingFile($event)" />
+
+        @if (model()) {
+          <button mat-stroked-button (click)="exportModel()" [disabled]="busy()">Сохранить модель в файл</button>
+        }
+        <button mat-stroked-button (click)="importInput.click()" [disabled]="busy()">Загрузить модель из файла</button>
+        <input #importInput type="file" accept=".json,application/json" hidden (change)="onImportModel($event)" />
+
+        @if (model()) {
+          <button mat-button color="warn" (click)="clearModel()" [disabled]="busy()">Сбросить</button>
+        }
+
+        @if (trainingFileName()) {
+          <span class="filename">{{ trainingFileName() }}</span>
+        }
+      </div>
+
+      @if (restored() && model()) {
+        <div class="banner banner-info compact">Загружена ранее обученная модель из локального хранилища.</div>
+      }
+
+      @if (metrics(); as mx) {
+        <div class="chips">
+          <mat-chip-set>
+            <mat-chip>строк обучения: {{ mx.trainRows | number }}</mat-chip>
+            <mat-chip>студентов: {{ mx.students | number }}</mat-chip>
+            <mat-chip>MAE: {{ num(mx.mae) }} балла</mat-chip>
+            <mat-chip>RMSE: {{ num(mx.rmse) }}</mat-chip>
+            <mat-chip>точность сдал/не сдал: {{ pct(mx.examAccuracy) }}</mat-chip>
+          </mat-chip-set>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <!-- ============================ TRENDS ============================ -->
+  @if (trends(); as t) {
+    <mat-card class="block">
+      <mat-card-header>
+        <mat-card-title>2. Найденные тренды в обучающем датасете</mat-card-title>
+        <mat-card-subtitle>Описательная аналитика, выявленная при обучении.</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3>Посещаемость и сдача по семестрам</h3>
+            <p class="hint">Виден заложенный тренд падения посещаемости с ростом номера семестра.</p>
+            <div class="chart-box"><canvas #attendanceCanvas></canvas></div>
+          </div>
+
+          <div class="chart-card">
+            <h3>Распределение экзаменационных оценок</h3>
+            <p class="hint">Красные — оценки ниже порога сдачи ({{ model()?.passThreshold }}).</p>
+            <div class="chart-box"><canvas #histogramCanvas></canvas></div>
+          </div>
+
+          <div class="chart-card wide">
+            <h3>Средний балл по предметам (цвет = сложность)</h3>
+            <p class="hint">Зелёный — лёгкий, оранжевый — нормальный, красный — тяжёлый.</p>
+            <div class="chart-box tall"><canvas #examBySubjectCanvas></canvas></div>
+          </div>
+
+          <div class="chart-card wide">
+            <h3>Средняя посещаемость по предметам</h3>
+            <p class="hint">Фиолетовым выделены предметы с обязательным посещением.</p>
+            <div class="chart-box tall"><canvas #attendanceSubjectCanvas></canvas></div>
+          </div>
+
+          <div class="chart-card wide">
+            <h3>Самые сильные корреляции оценок между предметами</h3>
+            <p class="hint">Разные виды математики и смежные дисциплины коррелируют сильнее всего.</p>
+            <div class="chart-box"><canvas #correlationCanvas></canvas></div>
+          </div>
+        </div>
+
+        <div class="highlights">
+          <h3>Предметы с самой высокой посещаемостью</h3>
+          <mat-chip-set>
+            @for (s of t.highAttendanceSubjects; track s.subject) {
+              <mat-chip [matTooltip]="'обяз. посещение: ' + (s.requiresAttendance ? 'да' : 'нет')">
+                {{ s.subject }} — {{ num(s.avgAttendance, 1) }}%
+              </mat-chip>
+            }
+          </mat-chip-set>
+
+          <h3>Топ коррелирующих пар предметов</h3>
+          <ul class="pair-list">
+            @for (p of t.topCorrelations; track trackPair($index, p)) {
+              <li><strong>r = {{ num(p.r) }}</strong> — {{ p.a }} ↔ {{ p.b }} <span class="muted">({{ p.commonStudents }} студ.)</span></li>
+            }
+          </ul>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- ============================ PREDICTION ============================ -->
+  <mat-card class="block">
+    <mat-card-header>
+      <mat-card-title>3. Предсказание рисков</mat-card-title>
+      <mat-card-subtitle>
+        Загрузите CSV с текущими студентами (например <code>data/current_students.csv</code>, где оценка за
+        экзамен последнего семестра пуста). Модель спрогнозирует исход предстоящей сессии.
+      </mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="row">
+        <button mat-flat-button color="accent" (click)="predictInput.click()" [disabled]="busy() || !model()">
+          Загрузить CSV для предсказания
+        </button>
+        <input #predictInput type="file" accept=".csv,text/csv" hidden (change)="onPredictionFile($event)" />
+        @if (!model()) {
+          <span class="muted">Сначала обучите модель.</span>
+        }
+        @if (predictionFileName()) {
+          <span class="filename">{{ predictionFileName() }}</span>
+        }
+      </div>
+
+      @if (prediction(); as p) {
+        <div class="chips">
+          <mat-chip-set>
+            <mat-chip>всего студентов: {{ p.totalStudents }}</mat-chip>
+            <mat-chip class="risk-high">высокий риск: {{ p.highRisk }}</mat-chip>
+            <mat-chip class="risk-medium">средний риск: {{ p.mediumRisk }}</mat-chip>
+            <mat-chip class="risk-low">низкий риск: {{ p.lowRisk }}</mat-chip>
+            <mat-chip>прогноз. незачётов: {{ p.predictedFailSubjects }}</mat-chip>
+          </mat-chip-set>
+        </div>
+
+        <div class="table-wrap">
+          <table class="pred-table">
+            <thead>
+              <tr>
+                <th>Студент</th>
+                <th>Группа</th>
+                <th>Риск</th>
+                <th>Прогноз. незачётов</th>
+                <th>Мин. прогноз балла</th>
+                <th>Средн. прогноз балла</th>
+                <th>Истор. посещаемость</th>
+                <th>Предметы под риском</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of p.students; track trackStudent($index, s)) {
+                <tr [class]="'risk-row-' + s.risk">
+                  <td>{{ s.studentId }}</td>
+                  <td>{{ s.group }}</td>
+                  <td><span class="badge" [class]="'badge-' + s.risk">{{ riskLabel(s.risk) }}</span></td>
+                  <td class="center">{{ s.predictedFailCount }}</td>
+                  <td class="center">{{ num(s.minPredictedExam, 1) }}</td>
+                  <td class="center">{{ num(s.avgPredictedExam, 1) }}</td>
+                  <td class="center">{{ num(s.avgHistoricalAttendance, 0) }}%</td>
+                  <td class="risky-subjects">
+                    @for (sub of s.subjects; track sub.subject) {
+                      @if (!sub.predictedPass) {
+                        <span class="subj-pill">{{ sub.subject }} ({{ num(sub.predictedExam, 1) }})</span>
+                      }
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>
