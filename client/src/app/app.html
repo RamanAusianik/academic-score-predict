@@ -1,1 +1,32 @@
-<app-dashboard />
+<mat-toolbar color="primary" class="topbar">
+  <span class="title">Предсказатель успеваемости студентов</span>
+  <span class="spacer"></span>
+  @if (model(); as m) {
+    <span class="topbar-meta">модель обучена {{ m.trainedAt | slice: 0:10 }}</span>
+  }
+</mat-toolbar>
+
+<nav mat-tab-nav-bar class="nav-tabs" [tabPanel]="tabPanel">
+  <a
+    mat-tab-link
+    routerLink="/"
+    routerLinkActive
+    #predictorTab="routerLinkActive"
+    [active]="predictorTab.isActive"
+  >
+    Прогноз успеваемости
+  </a>
+  <a
+    mat-tab-link
+    routerLink="/excel"
+    routerLinkActive
+    #excelTab="routerLinkActive"
+    [active]="excelTab.isActive"
+  >
+    Объединение Excel
+  </a>
+</nav>
+
+<mat-tab-nav-panel #tabPanel class="content">
+  <router-outlet />
+</mat-tab-nav-panel>
