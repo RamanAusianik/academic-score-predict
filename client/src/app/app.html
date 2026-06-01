@@ -11,6 +11,7 @@
     mat-tab-link
     routerLink="/"
     routerLinkActive
+    [routerLinkActiveOptions]="{ exact: true }"
     #predictorTab="routerLinkActive"
     [active]="predictorTab.isActive"
   >
