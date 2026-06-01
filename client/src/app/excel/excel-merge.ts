@@ -120,26 +120,48 @@ function createEmptyFilledRow(colCount: number, kind: RowKind): StyledRow {
   };
 }
 
-function createGrandTotalRow(colCount: number, totalCol: number, sum: number): StyledRow {
+function createGrandTotalRow(colCount: number, columnSums: number[], hasNumeric: boolean[]): StyledRow {
   const cells: StyledCell[] = Array.from({ length: colCount }, () => ({ value: '' }));
   cells[LABEL_COL_INDEX] = { value: 'ИТОГО' };
-  cells[totalCol] = { value: sum };
+  for (let c = 0; c < colCount; c++) {
+    if (c === LABEL_COL_INDEX) continue;
+    if (hasNumeric[c]) cells[c] = { value: columnSums[c] };
+  }
   return { kind: 'separator-green', cells };
 }
 
-/** Read the «Итого» value from the last subtotal row at the end of a file's content. */
-function getSectionTotalFromFile(rows: StyledRow[], totalCol: number, fileLabel: string): number {
+/** Find the last «Итого» row in a file; it must contain a number in the total column. */
+function findSectionTotalRow(
+  rows: StyledRow[],
+  totalCol: number,
+  fileLabel: string
+): StyledRow {
   for (let i = rows.length - 1; i >= 0; i--) {
     if (!isSectionTotalRow(rows[i])) continue;
     const n = numericValue(rows[i].cells[totalCol]?.value ?? null);
-    if (n !== null) return n;
+    if (n !== null) return rows[i];
   }
   throw new Error(`${fileLabel}: не найдена строка «Итого» с числовым значением в колонке «Всего».`);
 }
 
-/** Sum the per-file «Итого» values into the final grand total. */
-function sumFileSectionTotals(fileTotals: number[]): number {
-  return fileTotals.reduce((acc, n) => acc + n, 0);
+/** Sum each numeric column across per-file «Итого» rows (same rule as the grand total). */
+function sumColumnsFromSectionRows(
+  sectionRows: StyledRow[],
+  colCount: number
+): { sums: number[]; hasNumeric: boolean[] } {
+  const sums = new Array<number>(colCount).fill(0);
+  const hasNumeric = new Array<boolean>(colCount).fill(false);
+
+  for (const row of sectionRows) {
+    for (let c = 0; c < colCount; c++) {
+      const n = numericValue(row.cells[c]?.value ?? null);
+      if (n === null) continue;
+      sums[c] += n;
+      hasNumeric[c] = true;
+    }
+  }
+
+  return { sums, hasNumeric };
 }
 
 function rowsEqual(a: StyledRow, b: StyledRow): boolean {
@@ -249,7 +271,7 @@ export function mergeStyledSheets(sheets: ParsedSheet[]): MergeResult {
   let headerBlock: StyledRow[] | null = null;
   let maxCol = 0;
   let totalCol = 0;
-  const fileSectionTotals: number[] = [];
+  const fileSectionRows: StyledRow[] = [];
 
   const addMerge = (ref: string) => {
     if (seenMerges.has(ref)) return;
@@ -281,9 +303,7 @@ export function mergeStyledSheets(sheets: ParsedSheet[]): MergeResult {
     }
 
     const fileContent = fileIdx === 0 ? sheet.rows : sheet.rows.slice(HEADER_BLOCK_ROWS);
-    fileSectionTotals.push(
-      getSectionTotalFromFile(fileContent, totalCol, `Файл №${fileIdx + 1}`)
-    );
+    fileSectionRows.push(findSectionTotalRow(fileContent, totalCol, `Файл №${fileIdx + 1}`));
 
     if (fileIdx > 0) {
       mergedRows.push(createEmptyFilledRow(maxCol, 'separator-turquoise'));
@@ -311,8 +331,8 @@ export function mergeStyledSheets(sheets: ParsedSheet[]): MergeResult {
   }
 
   if (headerBlock) {
-    const grandTotal = sumFileSectionTotals(fileSectionTotals);
-    mergedRows.push(createGrandTotalRow(maxCol, totalCol, grandTotal));
+    const { sums, hasNumeric } = sumColumnsFromSectionRows(fileSectionRows, maxCol);
+    mergedRows.push(createGrandTotalRow(maxCol, sums, hasNumeric));
   }
 
   return { rows: mergedRows, merges: mergedMerges };
