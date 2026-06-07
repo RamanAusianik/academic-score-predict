@@ -299,7 +299,7 @@ export class Dashboard {
               {
                 label: 'Средняя посещаемость, %',
                 data: stats.map((s) => Math.round(s.avgAttendance * 10) / 10),
-                backgroundColor: stats.map((s) => (s.requiresAttendance ? '#5e35b1' : '#26a69a')),
+                backgroundColor: '#26a69a',
               },
             ],
           },
