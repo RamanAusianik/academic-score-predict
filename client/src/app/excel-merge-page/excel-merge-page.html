@@ -62,16 +62,15 @@
     <mat-card class="block">
       <mat-card-header>
         <mat-card-title>Задолженности в выбранных файлах</mat-card-title>
-        <mat-card-subtitle>
-          Топ-15 групп и предметов с наибольшим числом задолженностей (по столбцу «Всего»).
-        </mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <div class="charts-grid">
           @if (stats.byGroup.length > 0) {
             <div class="chart-card">
               <h3>Задолженности по группам</h3>
-              <div class="chart-box tall"><canvas #groupDebtCanvas></canvas></div>
+              <div class="chart-box" [style.height.px]="chartHeight(stats.byGroup.length)">
+                <canvas #groupDebtCanvas></canvas>
+              </div>
             </div>
           } @else {
             <p class="muted">Нет задолженностей по группам в выбранных файлах.</p>
@@ -80,7 +79,9 @@
           @if (stats.bySubject.length > 0) {
             <div class="chart-card">
               <h3>Задолженности по предметам</h3>
-              <div class="chart-box tall"><canvas #subjectDebtCanvas></canvas></div>
+              <div class="chart-box" [style.height.px]="chartHeight(stats.bySubject.length)">
+                <canvas #subjectDebtCanvas></canvas>
+              </div>
             </div>
           } @else {
             <p class="muted">Нет задолженностей по предметам в выбранных файлах.</p>

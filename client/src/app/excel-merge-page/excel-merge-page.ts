@@ -39,7 +39,7 @@ export class ExcelMergePage implements OnDestroy {
     effect(() => {
       const stats = this.debtStats();
       if (!stats) return;
-      queueMicrotask(() => this.renderCharts());
+      queueMicrotask(() => requestAnimationFrame(() => this.renderCharts()));
     });
   }
 
@@ -101,6 +101,13 @@ export class ExcelMergePage implements OnDestroy {
   }
 
   trackExcelFile = (_: number, file: File) => file.name + file.size;
+
+  /** Vertical bar chart height scales with item count so every label stays visible. */
+  chartHeight(itemCount: number): number {
+    const barSize = 30;
+    const padding = 56;
+    return Math.max(200, itemCount * barSize + padding);
+  }
 
   private async analyzeSelectedFiles(): Promise<void> {
     const files = this.excelFiles();

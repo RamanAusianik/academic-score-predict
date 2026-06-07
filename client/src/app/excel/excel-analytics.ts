@@ -3,8 +3,6 @@ import ExcelJS from 'exceljs';
 const HEADER_BLOCK_ROWS = 3;
 const SUBJECT_COL = 1;
 const GROUP_COL = 2;
-const TOP_N = 15;
-
 export interface DebtBarItem {
   label: string;
   value: number;
@@ -67,11 +65,10 @@ function debtFromRow(cells: ExcelJS.CellValue[], totalCol: number): number {
   return sum;
 }
 
-function topEntries(map: Map<string, number>, limit: number): DebtBarItem[] {
+function sortedEntries(map: Map<string, number>): DebtBarItem[] {
   return [...map.entries()]
     .filter(([, value]) => value > 0)
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ru'))
-    .slice(0, limit)
     .map(([label, value]) => ({ label, value }));
 }
 
@@ -129,7 +126,7 @@ export async function analyzeDebtsFromFiles(buffers: ArrayBuffer[]): Promise<Exc
   }
 
   return {
-    byGroup: topEntries(byGroup, TOP_N),
-    bySubject: topEntries(bySubject, TOP_N),
+    byGroup: sortedEntries(byGroup),
+    bySubject: sortedEntries(bySubject),
   };
 }
