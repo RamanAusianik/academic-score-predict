@@ -20,7 +20,7 @@ const HEADER_BLOCK_ROWS = 3;
 /** Column B (0-based index 1) holds section / grand total labels in the templates. */
 const LABEL_COL_INDEX = 1;
 
-type RowKind = 'data' | 'separator-turquoise' | 'separator-green';
+type RowKind = 'data' | 'separator-turquoise';
 
 interface StyledCell {
   value: ExcelJS.CellValue;
@@ -127,7 +127,7 @@ function createGrandTotalRow(colCount: number, columnSums: number[], hasNumeric:
     if (c === LABEL_COL_INDEX) continue;
     if (hasNumeric[c]) cells[c] = { value: columnSums[c] };
   }
-  return { kind: 'separator-green', cells };
+  return { kind: 'separator-turquoise', cells };
 }
 
 /** Find the last «Итого» row in a file; it must contain a number in the total column. */
@@ -352,8 +352,6 @@ async function writeStyledXlsx(rows: StyledRow[], merges: string[], sheetName = 
 
       if (row.kind === 'separator-turquoise') {
         applyTurquoiseStyle(cell);
-      } else if (row.kind === 'separator-green') {
-        applyHeaderStyle(cell, styledCell.style);
       } else if (rowIndex < HEADER_BLOCK_ROWS) {
         applyHeaderStyle(cell, styledCell.style);
       } else {
